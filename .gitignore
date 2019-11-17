@@ -1,0 +1,6 @@
+.vs/
+GenericHandler.Core/bin/
+GenericHandler.Core/obj/
+GenericHandler.Web/bin/
+GenericHandler.Web/obj/
+packages/
