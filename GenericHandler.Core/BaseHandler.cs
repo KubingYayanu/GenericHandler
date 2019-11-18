@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Text;
 using System.Web;
 using System.Web.Script.Serialization;
 using System.Web.SessionState;
@@ -15,23 +14,33 @@ namespace GenericHandler.Core
 
         public virtual object GET()
         {
-            return "Default GET Response";
+            var result = new Result { Message = "Default GET Response" };
+            return result;
         }
 
         public virtual object POST()
         {
-            return "Default POST Response";
+            var result = new Result { Message = "Default POST Response" };
+            return result;
         }
 
         public virtual object PUT()
         {
-            return "Default PUT Response";
+            var result = new Result { Message = "Default PUT Response" };
+            return result;
         }
 
         public virtual object DELETE()
         {
-            return "Default DELETE Response";
+            var result = new Result { Message = "Default DELETE Response" };
+            return result;
         }
+
+        /// <summary>
+        /// Intercept the execution right before authorization is valid
+        /// </summary>
+        /// <param name="context"></param>
+        public virtual void ValidateAuthorization(HttpContext context) { }
 
         /// <summary>
         /// Intercept the execution right before the handler method is called
@@ -54,10 +63,12 @@ namespace GenericHandler.Core
         public void ProcessRequest(HttpContext context)
         {
             this.context = context;
-            var result = new Result<object>();
             JavaScriptSerializer jsonSerializer = new JavaScriptSerializer();
+            IResult result;
             try
             {
+                ValidateAuthorization(context);
+
                 // it's possible to the requestor to be able to handle everything himself, overriding all this implementation
                 string handleRequest = context.Request["handlerequest"];
                 if (!string.IsNullOrEmpty(handleRequest) && handleRequest.ToLower() == "true")
@@ -91,7 +102,7 @@ namespace GenericHandler.Core
                 }
 
                 // call the requested method
-                result.Data = ajaxCall.Invoke(this, context);
+                result = ajaxCall.Invoke(this, context) as IResult;
 
                 // if neither on the arguments or the actual method the content type was set then make sure to use the default content type
                 if (string.IsNullOrEmpty(context.Response.ContentType) && !SkipContentTypeEvaluation)
@@ -99,11 +110,11 @@ namespace GenericHandler.Core
                     context.Response.ContentType = DefaultContentType();
                 }
 
-                result.Success = true;
                 context.Response.Write(jsonSerializer.Serialize(result));
             }
             catch (Exception ex)
             {
+                result = new Result();
                 result.Message = ex.InnerException == null ? ex.Message : ex.InnerException.Message;
                 context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 context.Response.Write(jsonSerializer.Serialize(result));

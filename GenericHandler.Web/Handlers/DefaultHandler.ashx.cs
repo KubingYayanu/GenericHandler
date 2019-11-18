@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using GenericHandler.Core;
 using GenericHandler.Core.Attributes;
+using GenericHandler.Core.Models;
 using GenericHandler.Web.Models;
 
 namespace GenericHandler.Web.Handlers
@@ -20,13 +21,17 @@ namespace GenericHandler.Web.Handlers
                 throw new ArgumentNullException($"{nameof(name)}", $"{nameof(name)} is required.");
             }
 
-            return string.Format("Hello {0}!", name);
+            var result = new Result { Success = true, Message = $"Hello {name}!" };
+
+            return result;
         }
 
         [HttpPost]
         public object SendPersonData(Person person)
         {
-            return person;
+            var result = new Result<Person> { Success = true, Data = person };
+
+            return result;
         }
     }
 }
